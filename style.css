@@ -88,22 +88,20 @@ h2 {
 }
 
 .favorite-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    margin-bottom: 0.5rem;
+    @apply bg-gray-50 p-4 rounded-lg shadow-sm flex justify-between items-center gap-4 transition duration-200 hover:bg-gray-100;
+}
+
+.favorite-item span {
+    @apply text-gray-700 flex-1;
 }
 
 .favorite-item button {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.4rem 0.8rem;
-    border-radius: 3px;
-    cursor: pointer;
+    @apply bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200 flex items-center gap-2;
+}
+
+.favorite-item button::before {
+    content: '×';
+    @apply text-lg font-bold;
 }
 
 #addToFavorites {
@@ -122,13 +120,52 @@ h2 {
     background-color: #0056b3;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .conversion-inputs {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
     
-    .arrow {
+    .arrow svg {
         transform: rotate(90deg);
-        margin: 1rem 0;
     }
+}
+
+input:focus, select:focus {
+    @apply outline-none ring-2 ring-indigo-500 border-indigo-500;
+}
+
+select option:hover {
+    @apply bg-indigo-100;
+}
+
+.favorites-list {
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #6366f1 #e5e7eb;
+}
+
+.favorites-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.favorites-list::-webkit-scrollbar-track {
+    @apply bg-gray-200 rounded-full;
+}
+
+.favorites-list::-webkit-scrollbar-thumb {
+    @apply bg-indigo-500 rounded-full;
+}
+
+input::placeholder {
+    @apply text-gray-400;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.favorites-list > div {
+    animation: fadeIn 0.3s ease-out;
 }

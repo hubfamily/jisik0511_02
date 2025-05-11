@@ -31,6 +31,15 @@ const toValue = document.getElementById('toValue');
 const favoritesList = document.getElementById('favoritesList');
 const addToFavoritesBtn = document.getElementById('addToFavorites');
 
+// Toast 알림 설정
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+});
+
 // 초기화
 function initializeUnits() {
     const type = conversionType.value;
@@ -44,6 +53,9 @@ function initializeUnits() {
         fromUnit.add(option1);
         toUnit.add(option2);
     }
+    
+    // 단위 변경 시 자동 변환
+    convert();
 }
 
 // 변환 함수
@@ -58,14 +70,21 @@ function convert() {
         return;
     }
 
-    if (type === 'temperature') {
-        const result = units[type][from].convert(value, to);
-        toValue.value = result.toFixed(2);
-    } else {
-        const fromRatio = units[type][from].ratio;
-        const toRatio = units[type][to].ratio;
-        const result = (value * fromRatio) / toRatio;
-        toValue.value = result.toFixed(4);
+    try {
+        if (type === 'temperature') {
+            const result = units[type][from].convert(value, to);
+            toValue.value = result.toFixed(2);
+        } else {
+            const fromRatio = units[type][from].ratio;
+            const toRatio = units[type][to].ratio;
+            const result = (value * fromRatio) / toRatio;
+            toValue.value = result.toFixed(4);
+        }
+    } catch (error) {
+        Toast.fire({
+            icon: 'error',
+            title: '변환 중 오류가 발생했습니다.'
+        });
     }
 }
 
@@ -78,15 +97,26 @@ function loadFavorites() {
         const item = document.createElement('div');
         item.className = 'favorite-item';
         item.innerHTML = `
-            <span>${fav.type} : ${fav.fromValue} ${units[fav.type][fav.fromUnit].name} → 
+            <span>${fav.type === 'length' ? '길이' : fav.type === 'weight' ? '무게' : '온도'}: 
+            ${fav.fromValue} ${units[fav.type][fav.fromUnit].name} → 
             ${fav.toValue} ${units[fav.type][fav.toUnit].name}</span>
-            <button onclick="removeFavorite(${index})">삭제</button>
+            <button onclick="removeFavorite(${index})" class="delete-btn">
+                삭제
+            </button>
         `;
         favoritesList.appendChild(item);
     });
 }
 
 function addToFavorites() {
+    if (!fromValue.value) {
+        Toast.fire({
+            icon: 'warning',
+            title: '변환할 값을 입력해주세요.'
+        });
+        return;
+    }
+
     const favorites = JSON.parse(localStorage.getItem('unitConverterFavorites')) || [];
     const newFavorite = {
         type: conversionType.value,
@@ -99,13 +129,35 @@ function addToFavorites() {
     favorites.push(newFavorite);
     localStorage.setItem('unitConverterFavorites', JSON.stringify(favorites));
     loadFavorites();
+
+    Toast.fire({
+        icon: 'success',
+        title: '즐겨찾기에 추가되었습니다.'
+    });
 }
 
 function removeFavorite(index) {
-    const favorites = JSON.parse(localStorage.getItem('unitConverterFavorites')) || [];
-    favorites.splice(index, 1);
-    localStorage.setItem('unitConverterFavorites', JSON.stringify(favorites));
-    loadFavorites();
+    Swal.fire({
+        title: '즐겨찾기 삭제',
+        text: '이 항목을 즐겨찾기에서 삭제하시겠습니까?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '삭제',
+        cancelButtonText: '취소',
+        confirmButtonColor: '#dc3545'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const favorites = JSON.parse(localStorage.getItem('unitConverterFavorites')) || [];
+            favorites.splice(index, 1);
+            localStorage.setItem('unitConverterFavorites', JSON.stringify(favorites));
+            loadFavorites();
+            
+            Toast.fire({
+                icon: 'success',
+                title: '삭제되었습니다.'
+            });
+        }
+    });
 }
 
 // 이벤트 리스너
@@ -118,3 +170,11 @@ addToFavoritesBtn.addEventListener('click', addToFavorites);
 // 초기화
 initializeUnits();
 loadFavorites();
+
+// 웰컴 메시지
+document.addEventListener('DOMContentLoaded', () => {
+    Toast.fire({
+        icon: 'info',
+        title: '단위 변환기가 준비되었습니다.'
+    });
+});
